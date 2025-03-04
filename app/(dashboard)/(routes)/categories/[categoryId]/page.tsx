@@ -11,7 +11,7 @@ const CategoryPage = async ({
 
         const billboardData = (
             await getDocs(
-                collection(doc(db, "data", "wModRJCDon6XLQYmnuPT"), "categories")
+                collection(doc(db, "data", "wModRJCDon6XLQYmnuPT"), "billboards")
             )
         ).docs.map(doc => doc.data()) as Billboards[];
 

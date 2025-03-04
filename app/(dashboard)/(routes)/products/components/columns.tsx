@@ -17,8 +17,6 @@ export type ProductColumns = {
     industry: string,
     brand: string,
     model: string,
-    year: string,
-    createdAt: string
 }
 export const columns: ColumnDef<ProductColumns>[] = [
   {

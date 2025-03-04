@@ -12,8 +12,13 @@ const ProductsPage = async () => {
 
 
     const storesSnapshot = await getDocs(collection(db, "stores"));
+
     const storeIds = storesSnapshot.docs.map(doc => doc.id);
+
+
     let holder : Product[] = [];
+
+
     for (const storeId of storeIds) {
         const ProductsData = (
             await getDocs(
@@ -40,8 +45,8 @@ const ProductsPage = async () => {
             brand: item.brand,
             model: item.model,
             images: item.images,
-            year: item.year ? format(item.createdAt.toDate(), "yyyy") : "",
-            createdAt: item.createdAt ? format(item.createdAt.toDate(), "MMMM dd, yyyy") : ""
+            // year: item.year ? format(item.createdAt.toDate(), "yyyy") : "",
+            // createdAt: item.createdAt ? format(item.createdAt.toDate(), "MMMM dd, yyyy") : ""
         })
     )
 

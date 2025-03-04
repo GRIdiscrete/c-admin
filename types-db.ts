@@ -97,3 +97,34 @@ export interface Order {
     deliveryInstructions: string;
     dnumber: string
 }
+
+
+export interface Part {
+    id: string,
+    Name: string,
+    part_code: string,
+    Category: string,
+    Make: string,
+    Model: string,
+    Year: number,
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+
+}
+
+export interface Review {
+    id: string;
+    comment: string;
+    userID: string;
+    userName: string;
+    productID: string;
+    createdAt: Timestamp;
+
+}
+
+export interface Wishlist {
+    product: string,
+    userId: string,
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+}

@@ -8,7 +8,7 @@ interface OverviewProps {
 const Overview = ({data}: OverviewProps) => {
     return(
         <ResponsiveContainer width={"100%"} height={350}>
-            <BarChart data={data}>
+            <BarChart data={data} >
                 <XAxis
                 dataKey={"name"}
                 stroke="#555"
@@ -16,13 +16,13 @@ const Overview = ({data}: OverviewProps) => {
                 tickLine={false}
                 axisLine={false}/>
                 <YAxis 
-                tickFormatter={(v)=>`Zig: ${v}`}
+                tickFormatter={(v)=>`$${v}`}
                 stroke="#555"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}/>
 
-                <Bar dataKey={"total"} fill="#5a69f3" radius={[4,4,0,0]}/>
+                <Bar dataKey={"total"} fill="#636af7" radius={[4,4,0,0]}/>
             </BarChart>
         </ResponsiveContainer>
     )

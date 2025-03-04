@@ -8,7 +8,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import {  Brand, Category, Industry, Model, Product } from "@/types-db"
+import {  Brand, Category, Industry, Model, Part, Product } from "@/types-db"
 import { auth } from "@clerk/nextjs/server"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -24,16 +24,14 @@ import { z } from "zod"
 
 interface ProductFormProps {
     initialData: Product;
-    categories: Category[];
+    parts: Part[];
     industries: Industry[];
-    brands: Brand[];
-    models: Model[];
 }
 
 const formSchema = z.object({
     name: z.string().min(1),
     price: z.coerce.number().min(1),
-    OEM: z.string().min(1),
+    Code: z.string().min(1),
     images: z.object({url: z.string()}).array(),
     isFeatured: z.boolean().default(false).optional(),
     isArchived: z.boolean().default(false).optional(),
@@ -41,14 +39,17 @@ const formSchema = z.object({
     industry:  z.string().min(1),
     brand:  z.string().min(1),
     model:  z.string().min(1),
+    stock: z.coerce.number().int(),
     year: z.coerce.number().int().max(2024).min(1950),
 });
 
 
 
-export const ProductForm = ({initialData, categories,
-    industries, models, brands
+export const ProductForm = ({initialData, 
+    industries, parts
 }: ProductFormProps) => {
+
+    console.log(parts);
 
 
 
@@ -57,7 +58,7 @@ export const ProductForm = ({initialData, categories,
         defaultValues: initialData || {
             name: "",
             price: 0,
-            OEM: "",
+            Code: "",
             images: [],
             isFeatured: false,
             isArchived: false,
@@ -65,6 +66,7 @@ export const ProductForm = ({initialData, categories,
             industry:  "",
             brand:  "",
             model:  "",
+            stock: 1,
             year:1950,
         }
     });
@@ -139,15 +141,9 @@ export const ProductForm = ({initialData, categories,
 
     var [holders, setHolders] = useState<Model[]>([])
 
-
-
-    function onSwitch(value: string) {
-        // Your logic here
-        const updatedHolders = models.filter(model => model.brandLabel === value);
-        console.log(updatedHolders);
-        setHolders(updatedHolders);
-        // Add more code to handle the switch value as needed
-    }
+    var [maker, setMaker] = useState('')
+    var [codec, setCode] = useState('')
+    var [currentYear, setCurrentYear] = useState(0)
 
 
 
@@ -204,21 +200,84 @@ export const ProductForm = ({initialData, categories,
 
 
 
-                        
-                        <div className="grid grid-cols-3 gap-8">
+                    <div className="grid grid-cols-3 gap-8">
                         <FormField control={form.control} name="name"
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel>Name</FormLabel>
+                                <FormLabel>Part Name</FormLabel>
                                 <FormControl>
-                                    <Input disabled={isLoading}
-                                    placeholder="The product Name"
-                                    {...field}/>
+                                    <Select
+                                    disabled={isLoading}
+                                    onValueChange={field.onChange}
+                                    value={field.value}
+                                    defaultValue={field.value}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue
+                                                defaultValue={field.value}
+                                                placeholder="Select a Part" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                            <SelectContent>
+                                                {parts.map(item => (
+                                                    <SelectItem
+                                                    key={item.id}
+                                                    value={item.Name}>
+                                                        {item.Name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        
+                                    </Select>
                                 </FormControl>
                                 <FormMessage/>
                             </FormItem>
                         )}/>
 
+                <FormField control={form.control} name="Code"
+                        render={({field}) => (
+                            <FormItem>
+                                <FormLabel>Part Code</FormLabel>
+                                <FormControl>
+                                    <Select
+                                    disabled={isLoading}
+                                    onValueChange={(e) => {
+                                        // setCode(e)
+                                        // console.log(e)
+                                        // const hold = parts
+                                        // .filter(item => item.part_code === e)
+                                        setCurrentYear(2012)
+                                        // console.log(hold)
+                                        field.onChange(e)
+                                    }}
+                                    value={field.value}
+                                    defaultValue={field.value}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue
+                                                defaultValue={field.value}
+                                                placeholder="Select a Part Code" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                            <SelectContent>
+                                                {parts
+                                                // .filter(item => item.part_code === codec)
+                                                .map(item => (
+                                                    <SelectItem
+                                                    key={item.id}
+                                                    value={item.part_code}>
+                                                        {item.part_code}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        
+                                    </Select>
+                                </FormControl>
+                                <FormMessage/>
+                            </FormItem>
+                        )}/>
 
                         <FormField control={form.control} name="price"
                         render={({field}) => (
@@ -253,11 +312,13 @@ export const ProductForm = ({initialData, categories,
                                             </SelectTrigger>
                                         </FormControl>
                                             <SelectContent>
-                                                {categories.map(item => (
+                                                {parts
+                                                // .filter(item => item.part_code === codec)
+                                                .map(item => (
                                                     <SelectItem
                                                     key={item.id}
-                                                    value={item.name}>
-                                                        {item.name}
+                                                    value={item.Category}>
+                                                        {item.Category}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -317,7 +378,7 @@ export const ProductForm = ({initialData, categories,
                                     <Select
                                     disabled={isLoading}
                                     onValueChange={(e) => {
-                                        onSwitch(e)
+                                        setMaker(e)
                                         field.onChange(e)
                                     }}
                                     value={field.value}
@@ -331,11 +392,13 @@ export const ProductForm = ({initialData, categories,
                                             </SelectTrigger>
                                         </FormControl>
                                             <SelectContent>
-                                                {brands.map(item => (
+                                                {parts
+                                                // .filter(item => item.part_code === codec)
+                                                .map(item => (
                                                     <SelectItem
                                                     key={item.id}
-                                                    value={item.name}>
-                                                        {item.name}
+                                                    value={item.Make}>
+                                                        {item.Make}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -367,11 +430,14 @@ export const ProductForm = ({initialData, categories,
                                             </SelectTrigger>
                                         </FormControl>
                                             <SelectContent>
-                                                {holders.map(item => (
+                                                {parts
+                                                // .filter(item => item.part_code === codec)
+                                                .filter(item => item.Make === maker)
+                                                .map(item => (
                                                     <SelectItem
                                                     key={item.id}
-                                                    value={item.name}>
-                                                        {item.name}
+                                                    value={item.Model}>
+                                                        {item.Model}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -400,7 +466,7 @@ export const ProductForm = ({initialData, categories,
                                 <FormLabel>Year</FormLabel>
                                 <FormControl>
                                     <Input
-                                    type="number" disabled={isLoading}
+                                    type="number" disabled={true}
                                     placeholder="production year.."
                                     {...field}/>
                                 </FormControl>
@@ -410,14 +476,16 @@ export const ProductForm = ({initialData, categories,
 
 
 
-                        <FormField control={form.control} name="OEM"
+
+
+                    <FormField control={form.control} name="stock"
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel>OEM ID</FormLabel>
+                                <FormLabel>Stock Level</FormLabel>
                                 <FormControl>
-                                    <Input disabled={isLoading}
-                                    placeholder="Product OEM"
-                                    {...field}/>
+                                    <Input type="number" disabled={true}
+                                    placeholder="Stock levels"
+                                    value={currentYear}/>
                                 </FormControl>
                                 <FormMessage/>
                             </FormItem>
@@ -436,7 +504,7 @@ export const ProductForm = ({initialData, categories,
                                 <div className="space-y-1 leading-none">
                                     <FormLabel>Featured</FormLabel>
                                     <FormDescription>
-                                        This product will be on home screen under featured products
+                                        This product is one of your key sellers, and will be prioritized over non-featured products
                                     </FormDescription>
                                 </div>
                                 
@@ -456,7 +524,7 @@ export const ProductForm = ({initialData, categories,
                                 <div className="space-y-1 leading-none">
                                     <FormLabel>Archived</FormLabel>
                                     <FormDescription>
-                                        This product will not be on display.
+                                    This product is currently not available for re-stocking but is part of your product line
                                     </FormDescription>
                                 </div>
                                 
@@ -481,3 +549,4 @@ export const ProductForm = ({initialData, categories,
 
   </>
 }
+
