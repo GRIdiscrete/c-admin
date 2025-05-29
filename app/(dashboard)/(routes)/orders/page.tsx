@@ -5,8 +5,10 @@ import { db } from "@/lib/firebase";
 import {  Order, Store } from "@/types-db";
 import { OrderColumns } from "./components/columns";
 import { it } from "node:test";
-import { Phone } from "lucide-react";
+import { CalendarDays, Phone } from "lucide-react";
 import { formatter } from "@/lib/utils";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 
 const OrdersPage = async () => {
@@ -76,6 +78,12 @@ const OrdersPage = async () => {
 
     return <div className="flex-col">
         <div className="flex-1 space-y-4 p-8 pt-6">
+        <Link href="/orders/calendar" passHref>
+                        <Button variant="outline" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            View Delivery Calendar
+                        </Button>
+                    </Link>
             <OrderClient data={formattedorders}/>
         </div>
     </div>

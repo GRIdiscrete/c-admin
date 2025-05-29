@@ -95,8 +95,13 @@ export interface Order {
     store_id: string;
     userID: string;
     deliveryInstructions: string;
-    dnumber: string
+    deliveryDate: string,
+    dnumber: string,
+    lat: number,
+    lng: number,
 }
+
+
 
 
 export interface Part {
@@ -127,4 +132,17 @@ export interface Wishlist {
     userId: string,
     createdAt: Timestamp;
     updatedAt: Timestamp;
+}
+
+export interface ReturnData {
+    id?: string; // This will be added when the document is created in Firestore
+    orderId: string;
+    userId: string;
+    originalOrder: Order;
+    description: string;
+    images: string[];
+    status: 'pending' | 'approved' | 'rejected' | 'processed' | 'delivering' | 'returned'; // Add other statuses as needed
+    createdAt: Timestamp | Date;
+    updatedAt: Timestamp | Date;
+    returnDeadline: string;
 }

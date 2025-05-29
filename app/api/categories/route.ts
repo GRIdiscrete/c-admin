@@ -85,24 +85,7 @@ export const POST = async (reQ: Request,
           await processCarParts()
     
           return NextResponse.json({ status: 200 });
-          
 
-
-              
-              // const CategoryRef = await addDoc(
-              //   collection(db,"data", "wModRJCDon6XLQYmnuPT", "categories"),
-              //   CategoryData
-              // );
-
-          
-          // Call the async function
-
-          
-
-
-
-    
-    
     }
    
 

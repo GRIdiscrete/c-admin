@@ -16,34 +16,16 @@ export const MainNav = ({className, ...props}: React.HtmlHTMLAttributes<HTMLElem
     const routes = [
         {
             href: `/`,
-            label: "Overview",
+            label: "Dashboard",
             active: pathname === `/`,
         },
-        {
-            href: `/billboards`,
-            label: "Billboards",
-            active: pathname === `/billboards`,
-        },
-        {
-            href: `/categories`,
-            label: "Categories",
-            active: pathname === `/categories`,
-        },
+
         {
             href: `/industries`,
             label: "Industries",
             active: pathname === `/industries`,
         },
-        {
-            href: `/brands`,
-            label: "Brands",
-            active: pathname === `/brands`,
-        },
-        {
-            href: `/models`,
-            label: "Models",
-            active: pathname === `/models`,
-        },
+
         {
             href: `/products`,
             label: "Products",
@@ -59,6 +41,11 @@ export const MainNav = ({className, ...props}: React.HtmlHTMLAttributes<HTMLElem
             label: "Stores",
             active: pathname === `/stores`,
         },
+        {
+          href: `/returns`,
+          label: "Returns",
+          active: pathname === `/returns`,
+      },
         {
             href: `/settings`,
             label: "Settings",
