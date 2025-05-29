@@ -8,7 +8,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Order } from "@/types-db";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, X, Package, MapPin, Store, Clock, DollarSign, List, Info } from "lucide-react";
+import { Calendar as CalendarIcon, X, Package, MapPin, Store, Clock, DollarSign, List, Info, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { formatter } from "@/lib/utils";
@@ -114,113 +114,168 @@ const DeliveryCalendar = ({ orders }: DeliveryCalendarProps) => {
     <div className="h-[800px] w-full p-14">
       {/* Order Details Modal */}
       <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex justify-between items-center">
-              <span>Order Details</span>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setSelectedEvent(null)}
-                className="text-gray-500 hover:text-gray-700"
-              >
+  <DialogContent className="max-w-2xl p-0 overflow-hidden">
+    <DialogHeader className="border-b px-6 py-4">
+      <DialogTitle className="flex justify-between items-center">
+        <span className="text-xl font-semibold text-gray-800">Order Details</span>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => setSelectedEvent(null)}
+          className="rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+          aria-label="Close"
+        >
+
+        </Button>
+      </DialogTitle>
+    </DialogHeader>
     
-              </Button>
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedEvent && (
-            <div className="space-y-6">
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold">{selectedEvent.order.clientName}</h2>
-                  <p className="text-sm text-gray-500">{selectedEvent.order.store_name}</p>
-                </div>
-                <div className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium">
-                  {selectedEvent.order.order_status}
-                </div>
+    {selectedEvent && (
+      <div className="space-y-6 p-6">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800">{selectedEvent.order.clientName}</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              <span className="font-medium">Store:</span> {selectedEvent.order.store_name}
+            </p>
+          </div>
+          <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+            selectedEvent.order.order_status === 'completed' 
+              ? 'bg-green-100 text-green-800' 
+              : selectedEvent.order.order_status === 'cancelled' 
+                ? 'bg-red-100 text-red-800' 
+                : 'bg-indigo-100 text-indigo-800'
+          }`}>
+            {selectedEvent.order.order_status.charAt(0).toUpperCase() + selectedEvent.order.order_status.slice(1)}
+          </div>
+        </div>
+
+        {/* Delivery Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+              <div className="bg-indigo-100 p-2 rounded-full">
+                <Clock className="h-5 w-5 text-indigo-600" />
               </div>
-
-              {/* Delivery Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <Clock className="h-5 w-5 text-indigo-600 mt-0.5" />
-                    <div>
-                      <h3 className="font-medium">Delivery Time</h3>
-                      <p className="text-sm">
-                        {dateFnsFormat(selectedEvent.start, "EEEE, MMMM d, yyyy")}
-                        <br />
-                        {dateFnsFormat(selectedEvent.start, "h:mm a")} - {dateFnsFormat(selectedEvent.end, "h:mm a")}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-indigo-600 mt-0.5" />
-                    <div>
-                      <h3 className="font-medium">Delivery Address</h3>
-                      <p className="text-sm">{selectedEvent.order.address}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <Store className="h-5 w-5 text-indigo-600 mt-0.5" />
-                    <div>
-                      <h3 className="font-medium">Store Address</h3>
-                      <p className="text-md">{selectedEvent.order.store_address}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Order Summary */}
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Package className="h-5 w-5 text-indigo-600" />
-                    <h3 className="font-medium">Order Summary</h3>
-                  </div>
-
-                  <div className="space-y-3">
-                    {selectedEvent.order.orderItems?.map((item: any, index: number) => (
-                      <div key={index} className="flex justify-between items-center border-b pb-2">
-                        <div>
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-xs text-gray-500">{item.qty || 1} × {formatter.format(item.price)}</p>
-                        </div>
-                        <p>{formatter.format(item.price * (item.qty || 1))}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-4 pt-2 border-t">
-                    <div className="flex justify-between font-medium">
-                      <span>Total</span>
-                      <span>{formatter.format(
-                        selectedEvent.order.orderItems?.reduce((total: number, item: any) => {
-                          return total + (item.price * (item.qty || 1));
-                        }, 0) || 0
-                      )}</span>
-                    </div>
-                  </div>
-                </div>
+              <div>
+                <h3 className="font-medium text-gray-700">Delivery Time</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {dateFnsFormat(selectedEvent.start, "EEEE, MMMM d, yyyy")}
+                  <br />
+                  {dateFnsFormat(selectedEvent.start, "h:mm a")} - {dateFnsFormat(selectedEvent.end, "h:mm a")}
+                </p>
               </div>
+            </div>
 
-              {/* Delivery Notes */}
-              {selectedEvent.order.deliveryInstructions && (
-                <div className="bg-indigo-50 p-4 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Info className="h-5 w-5 text-indigo-600" />
-                    <h3 className="font-medium">Delivery Notes</h3>
+            <div className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+              <div className="bg-indigo-100 p-2 rounded-full">
+                <MapPin className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-700">Delivery Address</h3>
+                <p className="text-sm text-gray-600 mt-1">{selectedEvent.order.address}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+              <div className="bg-indigo-100 p-2 rounded-full">
+                <Store className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-700">Store Address</h3>
+                <p className="text-sm text-gray-600 mt-1">{selectedEvent.order.store_address}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Order Summary */}
+          <div className="border rounded-lg p-4 hover:shadow-sm transition-shadow">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-indigo-100 p-2 rounded-full">
+                <Package className="h-5 w-5 text-indigo-600" />
+              </div>
+              <h3 className="font-medium text-gray-700">Order Summary</h3>
+            </div>
+
+            <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+              {selectedEvent.order.orderItems?.map((item: any, index: number) => (
+                <div 
+                  key={index} 
+                  className="flex justify-between items-center pb-3 hover:bg-gray-50 px-2 py-1 rounded transition-colors"
+                >
+                  <div>
+                    <p className="font-medium text-gray-800">{item.name}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {item.qty || 1} × {formatter.format(item.price)}
+                      {item.variation && ` (${item.variation})`}
+                    </p>
                   </div>
-                  <p className="text-sm">{selectedEvent.order.deliveryInstructions}</p>
+                  <p className="font-medium text-gray-800">
+                    {formatter.format(item.price * (item.qty || 1))}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex justify-between font-medium text-gray-800">
+                <span>Subtotal</span>
+                <span>{formatter.format(
+                  selectedEvent.order.orderItems?.reduce((total: number, item: any) => {
+                    return total + (item.price * (item.qty || 1));
+                  }, 0) || 0
+                )}</span>
+              </div>
+              {selectedEvent.order.deliveryFee && (
+                <div className="flex justify-between text-sm text-gray-600 mt-2">
+                  <span>Delivery Fee</span>
+                  <span>{formatter.format(selectedEvent.order.deliveryFee)}</span>
                 </div>
               )}
+              <div className="flex justify-between font-semibold text-lg mt-3 pt-2 border-t">
+                <span>Total</span>
+                <span>{formatter.format(
+                  (selectedEvent.order.orderItems?.reduce((total: number, item: any) => {
+                    return total + (item.price * (item.qty || 1));
+                  }, 0) || 0) + (selectedEvent.order.deliveryFee || 0)
+                )}</span>
+              </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
 
+        {/* Delivery Notes */}
+        {selectedEvent.order.deliveryInstructions && (
+          <div className="bg-indigo-50 p-4 rounded-lg hover:bg-indigo-100 transition-colors">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-indigo-200 p-2 rounded-full">
+                <Info className="h-5 w-5 text-indigo-700" />
+              </div>
+              <h3 className="font-medium text-gray-700">Delivery Notes</h3>
+            </div>
+            <p className="text-sm text-gray-600 pl-11">{selectedEvent.order.deliveryInstructions}</p>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <Button 
+            variant="outline" 
+            onClick={() => setSelectedEvent(null)}
+            className="hover:bg-gray-100"
+          >
+            Close
+          </Button>
+          <Button className="bg-indigo-600 hover:bg-indigo-700">
+            <Truck className="h-4 w-4 mr-2" />
+            Track Delivery
+          </Button>
+        </div>
+      </div>
+    )}
+  </DialogContent>
+</Dialog> 
       {/* Calendar Content */}
       <div className="mb-4 flex flex-col space-y-4">
         {/* Stats Section */}
