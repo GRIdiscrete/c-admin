@@ -20,11 +20,7 @@ export const MainNav = ({className, ...props}: React.HtmlHTMLAttributes<HTMLElem
             active: pathname === `/`,
         },
 
-        {
-            href: `/industries`,
-            label: "Industries",
-            active: pathname === `/industries`,
-        },
+
 
         {
             href: `/products`,
