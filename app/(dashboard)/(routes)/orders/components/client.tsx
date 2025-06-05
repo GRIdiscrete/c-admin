@@ -11,7 +11,6 @@ import { OrderColumns, columns } from "./columns"
 import ApiList from "@/components/api_list"
 import toast from "react-hot-toast"
 
-
 interface OrderClientProps {
   data: OrderColumns[]
 }
@@ -20,16 +19,32 @@ export const OrderClient = ({data}: OrderClientProps) => {
     const params = useParams()
     const router = useRouter()
 
-  return (<>
-  <div className="flex items-center justify-between">
-    <Heading title={`Orders (${data.length})`}
-    description="Manage all orders on the platform!"/>
+    const sortedData = [...data].sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
 
-  </div>
-  <Separator/>
-  <DataTable columns={columns} data={data} searchKey="name"/>
-
-
-
-  </>);
+  return (
+    <>
+      <div className="flex items-center justify-between">
+        <Heading 
+          title={`Orders (${data.length})`}
+          description="Manage all orders on the platform!"
+        />
+      </div>
+      <Separator/>
+      <DataTable 
+        columns={columns} 
+        data={sortedData} 
+        searchKey="name" 
+        initialState={{
+          sorting: [
+            {
+              id: "createdAt",  // This should match your accessorKey
+              desc: true        // Sort in descending order (newest first)
+            }
+          ]
+        }}
+      />
+    </>
+  );
 }

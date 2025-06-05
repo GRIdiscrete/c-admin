@@ -76,22 +76,21 @@ export const PATCH = async (reQ: Request,
         }
 
 
-     const orderRef = await getDocs(
-        collection(db, "stores", store_id, "orders")
-     )
-
-
-
-     if(!orderRef.empty){
+        const orderQuery = await getDocs(
+            collection(db, "stores", store_id, "orders")
+        );
         
-  
-        // await updateDoc(
-        //     doc(db, "stores", store_id, "orders", params.orderId), {
-        //         ...orderRef.data(),
-        //         order_status,
-        //         updatedAt: serverTimestamp(),
-        //     }
-        // )
+        if (!orderQuery.empty) {
+            console.log("------------------------------")
+            console.log(orderQuery.docs[0].data())
+            await updateDoc(
+                doc(db, "stores", store_id, "orders", params.orderId), {
+                    ...orderQuery.docs[0].data(),
+                    order_status,
+                    updatedAt: serverTimestamp(),
+                }
+            );
+        
      }else{
         return new NextResponse("Order not found!", {status: 404})
      }

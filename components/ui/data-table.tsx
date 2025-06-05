@@ -28,7 +28,13 @@ import { Input } from "@/components/ui/input"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[];
-  searchKey: string
+  searchKey: string;
+  initialState?: {
+    sorting?: {
+      id: string
+      desc: boolean
+    }[]
+  }
 }
 
 export function DataTable<TData, TValue>({

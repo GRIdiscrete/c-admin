@@ -9,11 +9,10 @@ import { Separator } from "@/components/ui/separator"
 import { storage } from "@/lib/firebase"
 import { Order, Product } from "@/types-db"
 import emailjs from 'emailjs-com';
-
 import { zodResolver } from "@hookform/resolvers/zod"
 import axios from "axios"
 import { deleteObject, ref } from "firebase/storage"
-import { Phone, Redo, Trash } from "lucide-react"
+import { Phone, Redo, Trash, Package, PackageCheck, Truck, CheckCircle, DollarSign, AlertCircle } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import React, { MouseEventHandler, useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
@@ -29,6 +28,8 @@ import { PaidModal } from "@/components/modal/paidmodal"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible"
 import { OrderColumns } from "@/app/(dashboard)/(routes)/orders/components/columns"
 import { PhoneModal } from "@/components/modal/phone-modal"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 
 interface OrderFormProps {
     initialData: Order[];
@@ -44,9 +45,9 @@ const schema = z.object({
     declined: z.boolean(),
     paid: z.boolean(),
     product: z.boolean(),
-  });
-  
-  interface ProductSummary {
+});
+
+interface ProductSummary {
     name: string;
     store_name: string;
     store_address: string;
@@ -57,53 +58,49 @@ const schema = z.object({
     year: number;
     orderId: string,
     productId: string,
-    storeaddress:string,
+    storeaddress: string,
     price: number,
     isPaid: boolean,
     dnumber: string
 }
 
-
-
-export const OrderPage = ({initialData, userId}: OrderFormProps, ) => {
-
-    
-
+export const OrderPage = ({initialData, userId}: OrderFormProps) => {
     if(!initialData || initialData.length == 0){
-        return <>
-        <div className="flex items-center justify-center">
-            <h3>No Pending Orders For this Client</h3>
-        </div>
-        </>
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md">
+                    <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900">No Pending Orders For this Client</h3>
+                    <p className="mt-2 text-sm text-gray-500">This client currently has no active orders to manage.</p>
+                </div>
+            </div>
+        )
     }
 
-    const name = initialData[0].clientName
-    const email = initialData[0].clientEmail
+    const name = initialData[0].clientName || ""
+    const email = initialData[0].clientEmail || ""
 
+    // State declarations (unchanged from original)
     const [open, setOpen] = useState(false);
     const [Dopen, setDOpen] = useState(false);
     const [Deliveringopen, setDeliveringOpen] = useState(false);
     const [Deliveredopen, setDeliveredOpen] = useState(false);
     const [Paidopen, setPaidOpen] = useState(false);
-
-
-
     const [isLoading, setIsloading] = useState(false);
     const [isDelivering, setIsDelivering] = useState(false);
     const [isDelivered, setIsDelivered] = useState(false);
     const [isDeclined, setIsDeclined] = useState(false);
     const [isPaid, setIsPaid] = useState(false);
-
-
+    const [allProducts, setAllProducts] = useState<ProductSummary[]>([]);
+    const [checkedProducts, setCheckedProducts] = useState(allProducts.map(() => false));
+    const [Phoneopen, setPhoneOpen] = useState(false);
+    const [dnumber, setdnumber] = useState('');
 
     const params = useParams()
     const router = useRouter()
 
-
-    const [allProducts, setAllProducts] = useState<ProductSummary[]>([]);
-
+    // Calculate total and populate allProducts (unchanged from original)
     let total = 0;
-
     initialData.forEach(order => {
         order.orderItems.forEach(product => {
             const quantity = product.qty || 0;
@@ -133,14 +130,11 @@ export const OrderPage = ({initialData, userId}: OrderFormProps, ) => {
     });
 
     let orderIds: string[] = [];
-
     for(const x of allProducts){
         if(!orderIds.includes(x.orderId)){
             orderIds.push(x.orderId)
         }
     }
-    
-
 
     const form = useForm<z.infer<typeof schema>>({
         resolver: zodResolver(schema),
@@ -151,13 +145,11 @@ export const OrderPage = ({initialData, userId}: OrderFormProps, ) => {
             declined: false,
             paid: false,
             product: false,
-          },
+        },
     });
 
 
-    const [checkedProducts, setCheckedProducts] = useState(
-        allProducts.map(() => false)
-      );
+
 
       useEffect(() => {
         let allChecked = checkedProducts.every(Boolean);
@@ -237,7 +229,7 @@ export const OrderPage = ({initialData, userId}: OrderFormProps, ) => {
 
         try {
             
-            await axios.patch(`/api/orders/${userId}`, data);
+            await axios.patch(`/api/orders/${initialData[0].id}`, data);
 
             toast.success("Order Status Updated")
 
@@ -465,9 +457,6 @@ export const OrderPage = ({initialData, userId}: OrderFormProps, ) => {
         toast.success("Phone number copied to clipboard")
      }
 
-     const [Phoneopen, setPhoneOpen] = useState(false);
-
-     const [dnumber, setdnumber] = useState('');
 
      const phone = async (id: string) => {
         try {
@@ -491,158 +480,340 @@ export const OrderPage = ({initialData, userId}: OrderFormProps, ) => {
 
      }
 
+     const completionPercentage = Math.round(
+        (checkedProducts.filter(Boolean).length / allProducts.length) * 100
+    );
 
     
 
-  return <>
-
-<DeleteModal isOpen={Dopen} onClose={() => setDOpen(false)}
-        onConfirm={() => completeDelete()} loading={isLoading} useriD={userId} />
-
-        <DeliveryModal isOpen={Deliveringopen} onClose={() => setDeliveringOpen(false)}
-        onConfirm={() => delivering("Delivering")} loading={isLoading}/>
-                <DeliveredModal isOpen={Deliveredopen} onClose={() => setDeliveredOpen(false)}
-        onConfirm={() => delivered("Delivered")} loading={isLoading}/>
-                <PaidModal isOpen={Paidopen} onClose={() => setPaidOpen(false)}
-        onConfirm={() => paid("Paid")} loading={isLoading}/>
-
-
-
-
-
-<div className="w-full flex items-center justify-center" onClick={() => onCopy(initialData[0].number)}>
-    <Phone className="h-4 w-4 mr-2" />
-    Call Client
-    </div>
-
-
-<div className="w-full flex items-center justify-center  cursor-pointer transition ease-in-out delay-150  hover:-translate-y-1 hover:scale-110  duration-300" onClick={() => setPhoneOpen(true)}>
-    <Redo className="h-4 w-4 mr-2" />
-    Set Driver Phone Number
-    </div>
-
-    <PhoneModal isOpen={Phoneopen} onClose={() => setPhoneOpen(false)}
-        onConfirm={phone} loading={isLoading}/>
-
-
-
-    <Form {...form}>
-                    <form 
-                    className="w-full space-y-8">
-
-
-                    <div className="container mx-auto p-4 rounded-lg shadow-lg max-h-screen overflow-y-auto">
-                        {allProducts.map((product, index) => (
-                        <Controller
-                            key={product.productId}
-                            disabled={isLoading}
-                            name={`product`}
-                            control={form.control}
-                            render={({ field }) => (
-                            <Card className="mb-4">
-
-                                <CardContent>
-                                    <FormLabel className="mr-10"
-                                    >{product.name} , {product.make} {product.model}</FormLabel>
-                                    <div className="float-right mt-5">
-                                        <Checkbox
-                                        checked={checkedProducts[index]}
-                                        onChange={handleCheckboxChange(index)}
-                                        />
-                                        <Button className="ml-4" onClick={() => {
-                                            removeProd(product.productId, product.orderId)
-                                        
-                                        }}>
-                                        <Trash className="w-4 h-4" />
-                                        </Button>
-                                        
-                                    </div>
-
-                                    <Collapsible>
-                                    <CollapsibleTrigger className="text-gray-500 cursor-pointer hover:text-blue-500"> Click for Details</CollapsibleTrigger>
-                                    <CollapsibleContent>
-                                        <FormLabel className="mr-10">Store:</FormLabel>
-                                        <FormLabel className="mr-10">{product.store_name}</FormLabel>
-                                        <FormLabel className="mr-10">Store Adress: </FormLabel>
-                                        <FormLabel className="mr-10">{product.store_address}</FormLabel>
-                                        <br />
-                                        <FormLabel className="mr-10">{product.year}</FormLabel>
-                                        <FormLabel className="mr-10">Quantity: ${product.quantity}</FormLabel>
-                                        <FormLabel className="mr-10">Price: ${product.price}</FormLabel>
-                                        <FormLabel className="mr-10">Total: ${product.price * product.quantity}</FormLabel>
-                                    </CollapsibleContent>
-                                    </Collapsible>
-                                </CardContent>
-                      
-                            </Card>
-                            )}
-                        />
-                        ))}
-                    </div>
-
-
-                    <div className="container flex flex-col items-center mx-auto p-4 rounded-lg shadow-lg">
-
-                        <FormField  control={form.control} name="delivering"
-                        render={({field}) => (
-                            <FormItem className="mb-3">
-                                <FormLabel className="mr-10">Delivering</FormLabel>
-                                <FormControl>
-                                    <Checkbox 
-                                                    checked={isDelivering}
-                                                    onChange={handleDeliveryChange()}/>
-                                </FormControl>
-                                <FormMessage/>
-                            </FormItem>
-                        )}/>
-
-                        <FormField control={form.control} name="delivered"
-                        render={({field}) => (
-                            <FormItem className="mb-3">
-                                <FormLabel className="mr-10">Delivered</FormLabel>
-                                <FormControl>
-                                    <Checkbox 
-                                                    checked={isDelivered}
-                                                    onChange={handleDeliveredChange()}/>
-                                </FormControl>
-                                <FormMessage/>
-                            </FormItem>
-                        )}/>
-
-
-
-                        <FormField control={form.control} name="paid"
-                        render={({field}) => (
-                            <FormItem className="mb-3">
-                                <FormLabel className="mr-10">Invoice Paid</FormLabel>
-                                <FormControl>
-                                    <Checkbox 
-                                                    checked={isPaid}
-                                                    onChange={handlePaidChange()}/>
-                                </FormControl>
-                                <FormMessage/>
-                            </FormItem>
-                        )}/>
-
-
-                            <h2 className="mb-3">The Total for the Invoice is: ${total}</h2>
-                    
-                            <Button className="mb-3 lg:bg-red-500 lg:hover:bg-red-700 lg:cursor-pointer lg:transition lg:duration-500" size={"lg"} onClick={onDeleteOrder}
-                            >Decline Order
-                            </Button>
-                            <Button className="mb-3 lg:bg-blue-500 lg:hover:bg-blue-700 lg:cursor-pointer lg:transition lg:duration-500" disabled={isLoading} size={"lg"} type="submit" 
-                            onClick={() => onSubmit}
-                            >Confirm Order Completion
-                            </Button>
-
-                    </div>
+     return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Order Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Order Management</h1>
+                    <p className="text-sm text-gray-500">Client: {name} ({email})</p>
+                </div>
                 
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <Button 
+                        variant="outline" 
+                        className="flex items-center gap-2"
+                        onClick={() => onCopy(initialData[0].number)}
+                    >
+                        <Phone className="h-4 w-4" />
+                        Call Client
+                    </Button>
+                    
+                    <Button 
+                        variant="outline" 
+                        className="flex items-center gap-2"
+                        onClick={() => setPhoneOpen(true)}
+                    >
+                        <Redo className="h-4 w-4" />
+                        Set Driver Number
+                    </Button>
+                </div>
+            </div>
+
+            {/* Progress Tracker */}
+            <div className="mb-8 bg-white p-6 rounded-lg shadow">
+                <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
+                    <Package className="h-5 w-5 text-blue-500" />
+                    Order Progress
+                </h2>
+                <div className="space-y-4">
+                    <div>
+                        <div className="flex justify-between mb-1">
+                            <span className="text-sm font-medium">Products Collected</span>
+                            <span className="text-sm text-gray-500">
+                                {checkedProducts.filter(Boolean).length}/{allProducts.length}
+                            </span>
+                        </div>
+                        <Progress value={completionPercentage} className="h-2" />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className={`p-3 rounded-lg border ${isDelivering ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
+                            <div className="flex items-center gap-2">
+                                <Truck className={`h-5 w-5 ${isDelivering ? 'text-green-500' : 'text-gray-400'}`} />
+                                <span className={`font-medium ${isDelivering ? 'text-green-700' : 'text-gray-600'}`}>
+                                    Delivering
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div className={`p-3 rounded-lg border ${isDelivered ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
+                            <div className="flex items-center gap-2">
+                                <PackageCheck className={`h-5 w-5 ${isDelivered ? 'text-green-500' : 'text-gray-400'}`} />
+                                <span className={`font-medium ${isDelivered ? 'text-green-700' : 'text-gray-600'}`}>
+                                    Delivered
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div className={`p-3 rounded-lg border ${isPaid ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
+                            <div className="flex items-center gap-2">
+                                <DollarSign className={`h-5 w-5 ${isPaid ? 'text-green-500' : 'text-gray-400'}`} />
+                                <span className={`font-medium ${isPaid ? 'text-green-700' : 'text-gray-600'}`}>
+                                    Payment
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Products Section */}
+            <div className="mb-8">
+                <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
+                    <Package className="h-5 w-5 text-blue-500" />
+                    Products ({allProducts.length})
+                </h2>
+                
+                <Form {...form}>
+                    <form className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {allProducts.map((product, index) => (
+                                <Controller
+                                    key={product.productId}
+                                    disabled={isLoading}
+                                    name={`product`}
+                                    control={form.control}
+                                    render={({ field }) => (
+                                        <Card className="hover:shadow-md transition-shadow">
+                                            <CardContent className="p-4">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <Checkbox
+                                                                checked={checkedProducts[index]}
+                                                                onChange={handleCheckboxChange(index)}
+                                                            />
+                                                            <FormLabel className="font-medium">
+                                                                {product.name}
+                                                            </FormLabel>
+                                                        </div>
+                                                        <Badge variant="outline" className="text-xs">
+                                                            {product.make} {product.model} ({product.year})
+                                                        </Badge>
+                                                    </div>
+                                                    
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm" 
+                                                        className="text-red-500 hover:text-red-700"
+                                                        onClick={() => removeProd(product.productId, product.orderId)}
+                                                    >
+                                                        <Trash className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                                
+                                                <Collapsible>
+                                                    <CollapsibleTrigger className="w-full mt-3">
+                                                        <div className="flex items-center justify-between text-sm text-gray-500 hover:text-blue-500 cursor-pointer">
+                                                            <span>View details</span>
+                                                            <svg className="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                                                            </svg>
+                                                        </div>
+                                                    </CollapsibleTrigger>
+                                                    <CollapsibleContent className="mt-3 space-y-2 text-sm">
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <div>
+                                                                <p className="text-gray-500">Store</p>
+                                                                <p className="font-medium">{product.store_name}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-gray-500">Address</p>
+                                                                <p className="font-medium">{product.store_address}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-gray-500">Quantity</p>
+                                                                <p className="font-medium">{product.quantity}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-gray-500">Unit Price</p>
+                                                                <p className="font-medium">${product.price}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="pt-2">
+                                                            <p className="text-gray-500">Total</p>
+                                                            <p className="font-medium text-lg">
+                                                                ${(product.price * product.quantity).toFixed(2)}
+                                                            </p>
+                                                        </div>
+                                                    </CollapsibleContent>
+                                                </Collapsible>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+                                />
+                            ))}
+                        </div>
                     </form>
                 </Form>
-                
+            </div>
 
-<footer className="mx-auto  fixed bottom-3 left-10 text-gray-500">
-    2024 Developed by <a href="https://gorillaresearch.net">GRI</a>
-</footer>
-  </>
+            {/* Order Summary and Actions */}
+            <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-blue-500" />
+                    Order Summary
+                </h2>
+                
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center border-b pb-4">
+                        <span className="text-gray-600">Subtotal</span>
+                        <span className="font-medium">${total.toFixed(2)}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center border-b pb-4">
+                        <span className="text-gray-600">Tax</span>
+                        <span className="font-medium">$0.00</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center pb-4">
+                        <span className="text-lg font-medium">Total</span>
+                        <span className="text-lg font-bold">${total.toFixed(2)}</span>
+                    </div>
+                    
+                    <Form {...form}>
+                        <form className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <FormField 
+                                    control={form.control} 
+                                    name="delivering"
+                                    render={({field}) => (
+                                        <FormItem className="space-y-0">
+                                            <div className="flex items-center space-x-2">
+                                                <FormControl>
+                                                    <Checkbox 
+                                                        checked={isDelivering}
+                                                        onChange={handleDeliveryChange()}
+                                                    />
+                                                </FormControl>
+                                                <FormLabel className="font-normal flex items-center gap-2">
+                                                    <Truck className="h-4 w-4" />
+                                                    Delivering
+                                                </FormLabel>
+                                            </div>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+                                
+                                <FormField 
+                                    control={form.control} 
+                                    name="delivered"
+                                    render={({field}) => (
+                                        <FormItem className="space-y-0">
+                                            <div className="flex items-center space-x-2">
+                                                <FormControl>
+                                                    <Checkbox 
+                                                        checked={isDelivered}
+                                                        onChange={handleDeliveredChange()}
+                                                    />
+                                                </FormControl>
+                                                <FormLabel className="font-normal flex items-center gap-2">
+                                                    <PackageCheck className="h-4 w-4" />
+                                                    Delivered
+                                                </FormLabel>
+                                            </div>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+                                
+                                <FormField 
+                                    control={form.control} 
+                                    name="paid"
+                                    render={({field}) => (
+                                        <FormItem className="space-y-0">
+                                            <div className="flex items-center space-x-2">
+                                                <FormControl>
+                                                    <Checkbox 
+                                                        checked={isPaid}
+                                                        onChange={handlePaidChange()}
+                                                    />
+                                                </FormControl>
+                                                <FormLabel className="font-normal flex items-center gap-2">
+                                                    <DollarSign className="h-4 w-4" />
+                                                    Invoice Paid
+                                                </FormLabel>
+                                            </div>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                            
+                            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                                <Button 
+                                    variant="destructive" 
+                                    className="flex-1 gap-2"
+                                    onClick={onDeleteOrder}
+                                    disabled={isLoading}
+                                >
+                                    <AlertCircle className="h-4 w-4" />
+                                    Decline Order
+                                </Button>
+                                
+                                <Button 
+                                    className="flex-1 gap-2"
+                                    disabled={isLoading} 
+                                    onClick={() => onSubmit}
+                                >
+                                    <CheckCircle className="h-4 w-4" />
+                                    Complete Order
+                                </Button>
+                            </div>
+                        </form>
+                    </Form>
+                </div>
+            </div>
+
+            {/* Footer */}
+            <footer className="mt-12 text-center text-sm text-gray-500">
+                © 2025 Developed by <a href="https://gorillaresearch.net" className="hover:text-blue-600">Niakazi Technology Solutions</a>
+            </footer>
+
+            {/* Modals (unchanged from original) */}
+            <DeleteModal 
+                isOpen={Dopen} 
+                onClose={() => setDOpen(false)}
+                onConfirm={() => completeDelete()} 
+                loading={isLoading} 
+                useriD={userId} 
+            />
+            
+            <DeliveryModal 
+                isOpen={Deliveringopen} 
+                onClose={() => setDeliveringOpen(false)}
+                onConfirm={() => delivering("Delivering")} 
+                loading={isLoading}
+            />
+            
+            <DeliveredModal 
+                isOpen={Deliveredopen} 
+                onClose={() => setDeliveredOpen(false)}
+                onConfirm={() => delivered("Delivered")} 
+                loading={isLoading}
+            />
+            
+            <PaidModal 
+                isOpen={Paidopen} 
+                onClose={() => setPaidOpen(false)}
+                onConfirm={() => paid("Paid")} 
+                loading={isLoading}
+            />
+            
+            <PhoneModal 
+                isOpen={Phoneopen} 
+                onClose={() => setPhoneOpen(false)}
+                onConfirm={phone} 
+                loading={isLoading}
+            />
+        </div>
+    )
 }

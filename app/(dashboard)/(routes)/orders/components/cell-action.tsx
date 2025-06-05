@@ -64,16 +64,16 @@ export const    CellAction = ({data}: CellActionProps) => {
             location.reload();
 
 
-            emailjs.send("service_miw5uzq", "template_pclaerv", {
-                to_email: data,
-                message: `Your order is now  ${data.order_status}. Track your order online, or contact us for assistance`,
-                from_name: "Carspian Auto",
-                to_name: name
-              }, 'NgwZzNEQN_63SAnSw')
-              .then((result) => {
-              }, (error) => {
-                console.log(error.text);
-                toast.error('Failed to complete Order. Please contact admin.')})
+            // emailjs.send("service_miw5uzq", "template_pclaerv", {
+            //     to_email: email,
+            //     message: `Your order is now  ${data.order_status}. Track your order online, or contact us for assistance`,
+            //     from_name: "Carspian Auto",
+            //     to_name: name
+            //   }, 'NgwZzNEQN_63SAnSw')
+            //   .then((result) => {
+            //   }, (error) => {
+            //     console.log(error.text);
+            //     toast.error('Failed to complete Order. Please contact admin.')})
 
             toast.success("Order Updated")
             setIsLoading(false);
@@ -107,7 +107,7 @@ export const    CellAction = ({data}: CellActionProps) => {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => {
                     console.log(data)
-                    onCopyUrl(`${origin}/${data.userID}/driver-portal`)
+                    onCopyUrl(`${origin}/${data.id}/driver-portal`)
                 }}>
                     <Phone className="h-4 w-4 mr-2" />
                     Copy Driver Link

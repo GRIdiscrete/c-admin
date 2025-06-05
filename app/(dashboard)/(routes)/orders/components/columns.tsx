@@ -82,9 +82,10 @@ export const columns: ColumnDef<OrderColumns>[] = [
       return (
         <p className={cn(
           "text-base font-semibold",
-          (order_status === "Processing" && "text-orange-600") ||
-          (order_status === "Delivering" && "text-blue-500") ||
-          (order_status === "Delivered" && "text-green-500") 
+          (order_status === "Processing" && "text-yellow-600") ||
+          (order_status === "Delivering" && "text-orange-500") ||
+          (order_status === "Delivered" && "text-blue-500") ||
+          (order_status === "Delivered" && "text-green-500")
         )}>
           {order_status}</p>
       )
@@ -105,9 +106,9 @@ export const columns: ColumnDef<OrderColumns>[] = [
       );
     },
     sortingFn: (rowA, rowB) => {
-      const dateA :any = new Date(rowA.original.createdAt).getTime();
+      const dateA: any = new Date(rowA.original.createdAt).getTime();
       const dateB: any = new Date(rowB.original.createdAt).getTime();
-      return dateA - dateB;
+      return dateB - dateA; // Changed from dateA - dateB to dateB - dateA
     },
   },
   

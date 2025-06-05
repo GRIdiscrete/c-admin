@@ -73,24 +73,31 @@ export const PATCH = async (reQ: Request,
         }
 
 
+
         const storesSnapshot = await getDocs(collection(db, "stores"));
         const storeIds = storesSnapshot.docs.map(doc => doc.id);
-
+        
         for (const storeId of storeIds) {
             const ordersRef = collection(db, "stores", storeId, "orders");
-            const q = query(ordersRef, where("userId", "==", params.userId));
-
-            const querySnapshot = await getDocs(q);
-            for (const doc of querySnapshot.docs) {
-                await updateDoc(doc.ref, { order_status, isPaid });
-            }
-
-        }
-
-
-
-        return NextResponse.json("Success", {status: 200});
+            const q = query(ordersRef, where("id", "==", params.userId));
         
+            const querySnapshot = await getDocs(q);
+            
+            // Create an array of update promises
+            const updatePromises = querySnapshot.docs.map(doc => 
+                updateDoc(doc.ref, { 
+                    ...doc.data(),  // Preserve existing data
+                    order_status,  // Update these fields
+                    isPaid,        // (make sure casing matches your Firestore fields)
+                    updatedAt: serverTimestamp()  // Add update timestamp
+                })
+            );
+        
+            // Execute all updates in parallel
+            await Promise.all(updatePromises);
+        }
+        
+        return NextResponse.json("Success", { status: 200 });
     
     }
    

@@ -24,7 +24,7 @@ const DriverPage = async ({
 
             const ordersQuery = query(
                 collection(doc(db, "stores", storeId), "orders"),
-                where("userID", "==", params.userId)
+                where("id", "==", params.userId)
             );
 
             const ordersSnapshot = await getDocs(ordersQuery);
@@ -57,8 +57,8 @@ const DriverPage = async ({
         <div className="flex-1 space-y-4 p-8 pt-6">
         <div className="flex items-center justify-center">
             <Heading 
-                title={`Order Page for User (${params.userId})`}
-                description="All the orders for this user that are not complete"
+                title={`Order Page for Order (${params.userId})`}
+                description="Please ensure timely and customer friendly delivery, and remember to set your number"
                 
             />
         </div>
