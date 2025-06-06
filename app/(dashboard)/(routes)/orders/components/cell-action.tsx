@@ -39,9 +39,9 @@ export const    CellAction = ({data}: CellActionProps) => {
         try {
             setIsLoading(true);
 
-            await axios.delete(`/api/orders/single/${data.id}`);
+            const response = await axios.delete(`/api/orders/single/${data.id}`);
 
-
+            console.log(response)
             toast.success("Order Removed");
             router.push(`/orders`);
             router.refresh();
@@ -55,16 +55,23 @@ export const    CellAction = ({data}: CellActionProps) => {
             setOpen(false);
         }
     }
-
-    const onUpdate = async (data:any, email:string, name:string) => {
+    const onUpdate = async (data: any, email: string, name: string) => {
         try {
             setIsLoading(true);
-            await axios.patch(`/api/orders/single/${data.id}`, data);
-            router.push(`/orders`)
-            location.reload();
+            const response = await axios.patch(`/api/orders/single/${data.id}`, data);
+            
+            // Only show success toast if the PATCH request was successful
+            toast.success("Order Updated");
+            
+            // Optional: You might want to check response.status or response.data here
+            // if you need to verify specific success conditions
+            
+            router.push(`/orders`);
+    
+            // EmailJS code commented out as in your original
+            // if you uncomment it, you might want to handle its success/error separately
 
-
-            // emailjs.send("service_miw5uzq", "template_pclaerv", {
+                        // emailjs.send("service_miw5uzq", "template_pclaerv", {
             //     to_email: email,
             //     message: `Your order is now  ${data.order_status}. Track your order online, or contact us for assistance`,
             //     from_name: "Carspian Auto",
@@ -75,15 +82,16 @@ export const    CellAction = ({data}: CellActionProps) => {
             //     console.log(error.text);
             //     toast.error('Failed to complete Order. Please contact admin.')})
 
-            toast.success("Order Updated")
-            setIsLoading(false);
+    
         } catch (error) {
-            toast.error("Something Went Wrong")
-        }finally{
+            toast.error("Something Went Wrong");
+        } finally {
             router.refresh();
-            setIsLoading(false)
+            setIsLoading(false);
         }
     }
+
+
   
   
     return <>

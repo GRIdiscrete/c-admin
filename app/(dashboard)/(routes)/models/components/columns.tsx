@@ -12,20 +12,7 @@ export type ModelColumns = {
     createdAt: string
 }
 export const columns: ColumnDef<ModelColumns>[] = [
-  {
-    accessorKey: "name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Model
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-  },
+
   {
     accessorKey: "brandLabel",
     header: ({ column }) => {

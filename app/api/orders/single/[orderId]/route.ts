@@ -47,73 +47,49 @@ export const GET = async (reQ: Request,
 
 
 
-export const PATCH = async (reQ: Request,
-    {params} : {params: { orderId : string}}
-) => {
+export const PATCH = async (req: Request, { params }: { params: { orderId: string } }) => {
+    console.log("Arrival---------------")
     try {
-        const {userId} = auth()
-        const body = await reQ.json()
+        const { userId } = auth();
+        const body = await req.json();
 
-     
-    
-        if(!userId){
-            return new NextResponse("Unauthorized", {status: 400})
+        if (!userId) {
+            return new NextResponse("Unauthorized", { status: 401 });
         }
-    
-        const {order_status, store_id} = body;
 
-        console.log(order_status, store_id)
-    
-    
-        if(!order_status){
-            return new NextResponse("Order Gone Missing", {status: 400})
+        const { id, order_status, store_id } = body;
+        console.log(body)
+
+        if (!order_status || !store_id) {
+            return new NextResponse("Missing required fields", { status: 400 });
         }
 
 
+        // Check if order exists
+        const orderRef = doc(db, "stores", store_id, "orders", id);
+        const orderSnap = await getDoc(orderRef);
 
-        if(!params.orderId){
-            return new NextResponse("No order specified", {status: 400})
+        if (!orderSnap.exists()) {
+
+            return new NextResponse("Order not found!", { status: 404 });
         }
 
+        // Update the order
+        await updateDoc(orderRef, {
+            order_status,
+            updatedAt: serverTimestamp(),
+        });
 
-        const orderQuery = await getDocs(
-            collection(db, "stores", store_id, "orders")
-        );
-        
-        if (!orderQuery.empty) {
-            console.log("------------------------------")
-            console.log(orderQuery.docs[0].data())
-            await updateDoc(
-                doc(db, "stores", store_id, "orders", params.orderId), {
-                    ...orderQuery.docs[0].data(),
-                    order_status,
-                    updatedAt: serverTimestamp(),
-                }
-            );
-        
-     }else{
-        return new NextResponse("Order not found!", {status: 404})
-     }
+        // Get updated order data
+        const updatedOrder = (await getDoc(orderRef)).data();
 
-     const order = (
-        await getDoc(
-            doc(db, "stores", store_id, "orders", params.orderId)
-        )
-     ).data() as Order;
+        return NextResponse.json(updatedOrder);
 
-
-    return NextResponse.json(order);
-    
-    
+    } catch (error) {
+        console.error(`ORDER_PATCH:`, error);
+        return new NextResponse("Internal Server Error", { status: 500 });
     }
-   
-
- catch (error) {
-    console.log(`ORDER_PATCH:${error}`);
-    return new NextResponse("Internal Server Error", {status : 500})
-}
 };
-
 
 
 

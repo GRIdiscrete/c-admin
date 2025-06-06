@@ -94,11 +94,13 @@ export interface Order {
     store_address: string;
     store_id: string;
     userID: string;
+    deliveryCost: number,
     deliveryInstructions: string;
     deliveryDate: string,
     dnumber: string,
     lat: number,
     lng: number,
+    sumTotal: number
 }
 
 
